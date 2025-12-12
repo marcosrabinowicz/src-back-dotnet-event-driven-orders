@@ -1,3 +1,5 @@
+using Orders.Application.Abstractions.Messaging;
+
 namespace Orders.Application.Events.Integration;
 
 public sealed record OrderCreatedIntegrationEvent(
@@ -5,4 +7,4 @@ public sealed record OrderCreatedIntegrationEvent(
     Guid CustomerId,
     decimal TotalAmount,
     string Currency
-);
+) : IntegrationEvent;

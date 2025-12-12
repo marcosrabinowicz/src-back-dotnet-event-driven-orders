@@ -1,17 +1,22 @@
 using Orders.Domain.Events;
-using Orders.Application.Events.Integration;
 
 namespace Orders.Application.Events.Integration.Mappers;
 
 public static class OrderCreatedIntegrationEventMapper
 {
-    public static OrderCreatedIntegrationEvent Map(OrderCreatedDomainEvent domainEvent)
+    public static OrderCreatedIntegrationEvent Map(
+        OrderCreatedDomainEvent domainEvent,
+        string correlationId
+    )
     {
         return new OrderCreatedIntegrationEvent(
             domainEvent.OrderId,
             domainEvent.CustomerId,
             domainEvent.TotalAmount.Amount,
             domainEvent.TotalAmount.Currency
-        );
+        )
+        {
+            CorrelationId = correlationId
+        };
     }
 }

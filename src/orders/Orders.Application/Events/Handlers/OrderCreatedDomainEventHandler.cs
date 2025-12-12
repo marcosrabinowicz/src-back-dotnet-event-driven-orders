@@ -16,7 +16,10 @@ public sealed class OrderCreatedDomainEventHandler : INotificationHandler<OrderC
 
     public async Task Handle(OrderCreatedDomainEvent notification, CancellationToken cancellationToken)
     {
-        var integrationEvent = OrderCreatedIntegrationEventMapper.Map(notification);
+        // TODO: em produção, pegar o CorrelationId do contexto (HTTP, message, etc.)
+        var correlationId = Guid.NewGuid().ToString();
+
+        var integrationEvent = OrderCreatedIntegrationEventMapper.Map(notification, correlationId);
 
         await _bus.PublishAsync(integrationEvent, cancellationToken);
     }

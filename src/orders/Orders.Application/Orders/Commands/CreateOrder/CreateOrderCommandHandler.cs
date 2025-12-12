@@ -6,8 +6,7 @@ using Orders.Domain.ValueObjects;
 
 namespace Orders.Application.Orders.Commands.CreateOrder;
 
-public sealed class CreateOrderCommandHandler
-    : IRequestHandler<CreateOrderCommand, Guid>
+public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, Guid>
 {
     private readonly IOrderRepository _repository;
 
