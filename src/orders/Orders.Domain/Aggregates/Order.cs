@@ -12,6 +12,7 @@ public sealed class Order : AggregateRoot
 
     public Guid Id { get; private set; }
     public Guid CustomerId { get; private set; }
+    public DateTime CreatedAt { get; private set; }
     public IReadOnlyCollection<OrderItem> Items => _items.AsReadOnly();
     public Money Total => _items
         .Select(i => i.Total)
@@ -19,39 +20,32 @@ public sealed class Order : AggregateRoot
 
     private Order() { } // EF Core
 
-    private Order(Guid customerId, IEnumerable<OrderItem> items)
+    private Order(Guid customerId)
+    {
+        Id = Guid.NewGuid();
+        CustomerId = customerId;
+        CreatedAt = DateTime.UtcNow;
+    }
+
+    public static Order Create(Guid customerId)
     {
         if (customerId == Guid.Empty)
             throw new DomainException("CustomerId inválido.");
 
-        if (items is null)
-            throw new DomainException("A lista de itens não pode ser nula.");
-
-        Id = Guid.NewGuid();
-        CustomerId = customerId;
-
-        _items.AddRange(items);
-
-        EnsureInvariants();
-
-        AddDomainEvent(new OrderCreatedDomainEvent(Id, CustomerId, Total));
+        return new Order(customerId);
     }
-
-    public static Order Create(Guid customerId, IEnumerable<OrderItem> items)
-    {
-        return new Order(customerId, items);
-    }
-
-    // ----------------------------------------------------------------------
-    // 🟦 MÉTODOS REAIS DE DOMÍNIO
-    // ----------------------------------------------------------------------
 
     public void AddItem(Guid productId, int quantity, Money unitPrice)
     {
-        var item = new OrderItem(productId, quantity, unitPrice);
-        _items.Add(item);
+        var existingItem = _items.FirstOrDefault(x => x.ProductId == productId);
 
-        EnsureInvariants();
+        if (existingItem is not null)
+        {
+            existingItem.IncreaseQuantity(quantity);
+            return;
+        }
+
+        _items.Add(new OrderItem(productId, quantity, unitPrice));
     }
 
     public void RemoveItem(Guid productId)
@@ -62,48 +56,14 @@ public sealed class Order : AggregateRoot
             throw new DomainException("Item inexistente.");
 
         _items.Remove(item);
-
-        EnsureInvariants();
     }
 
-    public void ChangeItemQuantity(Guid productId, int newQuantity)
+    public void Submit()
     {
-        var item = _items.FirstOrDefault(i => i.ProductId == productId);
-        if (item is null)
-            throw new DomainException("Item inexistente.");
-
-        item.UpdateQuantity(newQuantity);
-
         EnsureInvariants();
+
+        AddDomainEvent(new OrderCreatedDomainEvent(Id, CustomerId, Total));
     }
-
-    public void ChangeItemPrice(Guid productId, Money newUnitPrice)
-    {
-        var item = _items.FirstOrDefault(i => i.ProductId == productId);
-        if (item is null)
-            throw new DomainException("Item inexistente.");
-
-        item.UpdateUnitPrice(newUnitPrice);
-
-        EnsureInvariants();
-    }
-
-    public void RecalculateItem(Guid productId, int newQuantity, Money newPrice)
-    {
-        var item = _items.FirstOrDefault(i => i.ProductId == productId);
-
-        if (item is null)
-            throw new DomainException("Item inexistente.");
-
-        item.UpdateQuantity(newQuantity);
-        item.UpdateUnitPrice(newPrice);
-
-        EnsureInvariants();
-    }
-
-    // ----------------------------------------------------------------------
-    // 🔒 INVARIANTES
-    // ----------------------------------------------------------------------
 
     private void EnsureInvariants()
     {

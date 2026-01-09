@@ -1,4 +1,4 @@
-using Orders.Domain.Abstractions;
+using Orders.Domain.Interfaces;
 using Orders.Domain.ValueObjects;
 
 namespace Orders.Domain.Events;

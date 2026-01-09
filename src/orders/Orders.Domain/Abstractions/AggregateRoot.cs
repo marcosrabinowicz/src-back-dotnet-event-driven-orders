@@ -1,3 +1,5 @@
+using Orders.Domain.Interfaces;
+
 namespace Orders.Domain.Abstractions;
 
 public abstract class AggregateRoot

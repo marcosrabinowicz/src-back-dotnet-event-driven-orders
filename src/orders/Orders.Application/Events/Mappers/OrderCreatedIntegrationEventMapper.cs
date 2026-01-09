@@ -4,10 +4,7 @@ namespace Orders.Application.Events.Integration.Mappers;
 
 public static class OrderCreatedIntegrationEventMapper
 {
-    public static OrderCreatedIntegrationEvent Map(
-        OrderCreatedDomainEvent domainEvent,
-        string correlationId
-    )
+    public static OrderCreatedIntegrationEvent Map(OrderCreatedDomainEvent domainEvent, string correlationId)
     {
         return new OrderCreatedIntegrationEvent(
             domainEvent.OrderId,

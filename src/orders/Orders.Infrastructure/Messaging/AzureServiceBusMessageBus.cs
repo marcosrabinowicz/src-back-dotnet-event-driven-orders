@@ -1,6 +1,7 @@
 using System.Text.Json;
 using Azure.Messaging.ServiceBus;
 using Orders.Application.Abstractions.Messaging;
+using Orders.Application.Interfaces;
 using Polly;
 using Polly.Retry;
 
@@ -11,7 +12,6 @@ public sealed class AzureServiceBusMessageBus : IMessageBus
     private readonly ServiceBusClient _client;
     private readonly string _topicName;
     private readonly AsyncRetryPolicy _retryPolicy;
-
 
     public AzureServiceBusMessageBus(ServiceBusClient client, string topicName)
     {
@@ -31,13 +31,13 @@ public sealed class AzureServiceBusMessageBus : IMessageBus
         var sender = _client.CreateSender(_topicName);
 
         var body = JsonSerializer.Serialize(@event);
+
         var message = new ServiceBusMessage(body)
         {
-            ContentType = "application/json"
+            ContentType = "application/json",
+            MessageId = @event.EventId.ToString(),
+            CorrelationId = @event.CorrelationId
         };
-
-        message.CorrelationId = @event.CorrelationId;
-        message.MessageId = @event.EventId.ToString();
 
         await _retryPolicy.ExecuteAsync(async () =>
         {

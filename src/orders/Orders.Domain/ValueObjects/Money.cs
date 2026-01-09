@@ -27,8 +27,12 @@ public sealed class Money : IEquatable<Money>
         return new Money(a.Amount + b.Amount, a.Currency);
     }
 
+    public static Money Zero
+        => new(0, "BRL");
+
     public bool Equals(Money? other)
         => other != null && Amount == other.Amount && Currency == other.Currency;
 
-    public override int GetHashCode() => HashCode.Combine(Amount, Currency);
+    public override int GetHashCode()
+        => HashCode.Combine(Amount, Currency);
 }

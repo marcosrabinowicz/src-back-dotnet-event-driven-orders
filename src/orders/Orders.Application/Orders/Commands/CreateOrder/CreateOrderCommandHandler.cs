@@ -1,8 +1,8 @@
 using MediatR;
 using Orders.Domain.Aggregates;
 using Orders.Domain.Abstractions.Repositories;
-using Orders.Domain.Entities;
 using Orders.Domain.ValueObjects;
+using Orders.Domain.Exceptions;
 
 namespace Orders.Application.Orders.Commands.CreateOrder;
 
@@ -17,15 +17,15 @@ public sealed class CreateOrderCommandHandler : IRequestHandler<CreateOrderComma
 
     public async Task<Guid> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
     {
-        var items = request.Items
-            .Select(i => new OrderItem(
-                i.ProductId,
-                i.Quantity,
-                new Money(i.UnitPrice) // conversão aqui!
-            ))
-            .ToList();
+        if (request.Items is null || request.Items.Count == 0)
+            throw new DomainException("Pedido deve ter pelo menos 1 item.");
 
-        var order = Order.Create(request.CustomerId, items);
+        var order = Order.Create(request.CustomerId);
+
+        foreach (var i in request.Items)
+            order.AddItem(i.ProductId, i.Quantity, new Money(i.UnitPrice));
+
+        order.Submit();
 
         await _repository.AddAsync(order, cancellationToken);
 

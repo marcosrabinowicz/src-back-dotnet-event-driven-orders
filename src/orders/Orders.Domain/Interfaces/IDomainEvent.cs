@@ -1,6 +1,6 @@
 using MediatR;
 
-namespace Orders.Domain.Abstractions;
+namespace Orders.Domain.Interfaces;
 
 public interface IDomainEvent : INotification
 {
